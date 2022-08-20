@@ -1,22 +1,27 @@
 import type { NextPage } from 'next';
 import React from 'react';
+import { List } from '../components/List';
 import { useFetchProducts } from '../hooks/useFetchProducts';
+import { Button, Center, Container, Spinner } from '@chakra-ui/react';
+import { Filters } from '../components/Filters';
 
 const Home: NextPage = () => {
-	const { result, isLoading } = useFetchProducts({});
+	const { result, isLoading, loadMore, canLoadMore } = useFetchProducts({});
 
 	return (
-		<React.Fragment>
+		<Container maxW="container.md" centerContent={isLoading}>
 			{isLoading ?
-				'Loading...'
+				<Spinner />
 				:
 				<React.Fragment>
-					{result.products.map((product) =>
-						<p key={product.id}>{product.title}</p>
-					)}
+					<Filters />
+					<List result={result} />
+					{canLoadMore && <Center>
+						<Button colorScheme='blue' onClick={loadMore} marginTop="4">Load more</Button>
+					</Center>}
 				</React.Fragment>
 			}
-		</React.Fragment>
+		</Container>
 	);
 };
 
