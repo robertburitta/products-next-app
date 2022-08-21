@@ -6,7 +6,7 @@ import { useFetchProducts } from '../hooks/useFetchProducts';
 import { Button, Center, Container, Divider, Spinner } from '@chakra-ui/react';
 
 const Home: NextPage = () => {
-	const { result, isLoadingProducts, loadMore, canLoadMore, searchByCategory, categories, isLoadingCategories } = useFetchProducts({});
+	const { result, isLoadingProducts, loadMore, canLoadMore, searchByCategory, categories, isLoadingCategories, searchByBrand, brands, isLoadingBrands } = useFetchProducts({});
 
 	return (
 		<Container maxW={{ base: 'container.sm', md: 'container.md' }}>
@@ -16,7 +16,7 @@ const Home: NextPage = () => {
 				</Center>
 				:
 				<React.Fragment>
-					<Filters isLoadingCategories={isLoadingCategories} categories={categories} searchByCategory={searchByCategory} />
+					<Filters isLoadingCategories={isLoadingCategories} categories={categories} searchByCategory={searchByCategory} isLoadingBrands={isLoadingBrands} brands={brands} searchByBrand={searchByBrand} />
 					<Divider my="3" />
 					<List result={result} />
 					{canLoadMore &&

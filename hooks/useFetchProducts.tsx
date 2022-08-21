@@ -10,13 +10,15 @@ export const useFetchProducts = ({ limit = 5 }: useFetchProductsProps) => {
 	const API_URL = 'https://dummyjson.com/products';
 	const [result, setResult] = useState({} as Result);
 	const [categories, setCategories] = useState([] as string[]);
+	const [brands, setBrands] = useState([] as string[]);
 	const [category, setCategory] = useState('');
+	const [brand, setBrand] = useState('');
 	const [page, setPage] = useState(1);
 	const [canLoadMore, setCanLoadMore] = useState(true);
 
 	useEffect(() => {
 		if (result.total) {
-			if (page * limit === result.total) {
+			if (page * limit >= result.total) {
 				setCanLoadMore(false);
 			} else {
 				setCanLoadMore(true);
@@ -36,9 +38,11 @@ export const useFetchProducts = ({ limit = 5 }: useFetchProductsProps) => {
 		});
 	};
 
-	const { isLoading: isLoadingProducts } = useQuery(['products', page, category], () => {
+	const { isLoading: isLoadingProducts } = useQuery(['products', page, category, brand], () => {
 		if (category !== '') {
 			return fetchData(`${API_URL}/category/${category}?skip=${(page - 1) * limit}&limit=${limit}`);
+		} else if (brand !== '') {
+			return fetchData(`${API_URL}/search?q=${brand}`);
 		} else {
 			return fetchData(`${API_URL}?skip=${(page - 1) * limit}&limit=${limit}`);
 		}
@@ -86,6 +90,32 @@ export const useFetchProducts = ({ limit = 5 }: useFetchProductsProps) => {
 		}
 	});
 
+	const searchByBrand = (brand: string) => {
+		setBrand(brand);
+		setPage(1);
+	};
+
+	const { isLoading: isLoadingBrands } = useQuery('brands', () => fetchData(`${API_URL}?skip=0&limit=100&select=brand`), {
+		refetchOnMount: false,
+		refetchOnWindowFocus: false,
+		refetchOnReconnect: false,
+		onSuccess: (data) => {
+			let resultData = data as Result;
+			let _brands: string[] = [];
+
+			resultData.products.forEach((product) => {
+				if (!_brands.includes(product.brand)) {
+					_brands.push(product.brand);
+				}
+			});
+
+			setBrands(_brands);
+		},
+		onError: (err) => {
+			console.error(err);
+		}
+	});
+
 	return {
 		result,
 		isLoadingProducts,
@@ -93,6 +123,9 @@ export const useFetchProducts = ({ limit = 5 }: useFetchProductsProps) => {
 		canLoadMore,
 		searchByCategory,
 		categories,
-		isLoadingCategories
+		isLoadingCategories,
+		searchByBrand,
+		brands,
+		isLoadingBrands,
 	};
 };
