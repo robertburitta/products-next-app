@@ -7,46 +7,58 @@ interface useFetchProductsProps {
 }
 
 export const useFetchProducts = ({ limit = 5 }: useFetchProductsProps) => {
+	const API_URL = 'https://dummyjson.com/products';
 	const [result, setResult] = useState({} as Result);
 	const [categories, setCategories] = useState([] as string[]);
+	const [category, setCategory] = useState('');
 	const [page, setPage] = useState(1);
 	const [canLoadMore, setCanLoadMore] = useState(true);
-	const API_URL = 'https://dummyjson.com/products';
 
 	useEffect(() => {
 		if (result.total) {
 			if (page * limit === result.total) {
 				setCanLoadMore(false);
+			} else {
+				setCanLoadMore(true);
 			}
 		}
-	}, [page]);
+	}, [result, page, limit]);
 
-	const fetchProducts = () => {
+	const fetchData = (url: string) => {
 		return new Promise(async (resolve, reject) => {
 			try {
-				await fetch(`${API_URL}?skip=${(page - 1) * limit}&limit=${limit}`)
-					.then(res => res.json()).then((data: Result) => {
-						resolve(data);
-					});
+				await fetch(url).then(res => res.json()).then((data: Result) => {
+					resolve(data);
+				});
 			} catch (err) {
 				reject(new Error((err as Error).message));
 			}
 		});
 	};
 
-	const { isLoading: isLoadingProducts } = useQuery(['products', page], () => fetchProducts(), {
+	const { isLoading: isLoadingProducts } = useQuery(['products', page, category], () => {
+		if (category !== '') {
+			return fetchData(`${API_URL}/category/${category}?skip=${(page - 1) * limit}&limit=${limit}`);
+		} else {
+			return fetchData(`${API_URL}?skip=${(page - 1) * limit}&limit=${limit}`);
+		}
+	}, {
 		refetchOnMount: false,
 		refetchOnWindowFocus: false,
 		refetchOnReconnect: false,
 		onSuccess: (data) => {
 			let resultData = data as Result;
 
-			setResult((prev) => {
-				return {
-					...resultData,
-					products: prev.products ? [...prev.products, ...resultData.products] : resultData.products
-				};
-			});
+			if (page === 1) {
+				setResult(resultData);
+			} else {
+				setResult((prev) => {
+					return {
+						...resultData,
+						products: prev.products ? [...prev.products, ...resultData.products] : resultData.products
+					};
+				});
+			}
 		},
 		onError: (err) => {
 			console.error(err);
@@ -57,20 +69,12 @@ export const useFetchProducts = ({ limit = 5 }: useFetchProductsProps) => {
 		setPage((prev) => prev + 1);
 	};
 
-	const fetchCategories = () => {
-		return new Promise(async (resolve, reject) => {
-			try {
-				await fetch(`${API_URL}/categories`)
-					.then(res => res.json()).then((data: Result) => {
-						resolve(data);
-					});
-			} catch (err) {
-				reject(new Error((err as Error).message));
-			}
-		});
+	const searchByCategory = (category: string) => {
+		setCategory(category);
+		setPage(1);
 	};
 
-	const { isLoading: isLoadingCategories } = useQuery('categories', () => fetchCategories(), {
+	const { isLoading: isLoadingCategories } = useQuery('categories', () => fetchData(`${API_URL}/categories`), {
 		refetchOnMount: false,
 		refetchOnWindowFocus: false,
 		refetchOnReconnect: false,
@@ -82,30 +86,13 @@ export const useFetchProducts = ({ limit = 5 }: useFetchProductsProps) => {
 		}
 	});
 
-	const fetchByCategory = (category: string) => {
-		return new Promise(async (resolve, reject) => {
-			try {
-				await fetch(`${API_URL}/category/${category}`)
-					.then(res => res.json()).then((data: Result) => {
-						resolve(data);
-					});
-			} catch (err) {
-				reject(new Error((err as Error).message));
-			}
-		});
-	};
-
-	const searchByCategory = (category: string) => {
-		console.log(category);
-	};
-
 	return {
 		result,
 		isLoadingProducts,
 		loadMore,
 		canLoadMore,
+		searchByCategory,
 		categories,
-		isLoadingCategories,
-		searchByCategory
+		isLoadingCategories
 	};
 };

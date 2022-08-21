@@ -1,15 +1,15 @@
 import type { NextPage } from 'next';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { List } from '../components/List';
 import { Filters } from '../components/Filters';
 import { useFetchProducts } from '../hooks/useFetchProducts';
 import { Button, Center, Container, Divider, Spinner } from '@chakra-ui/react';
 
 const Home: NextPage = () => {
-	const { result, isLoadingProducts, loadMore, canLoadMore, categories, isLoadingCategories, searchByCategory } = useFetchProducts({});
+	const { result, isLoadingProducts, loadMore, canLoadMore, searchByCategory, categories, isLoadingCategories } = useFetchProducts({});
 
 	return (
-		<Container maxW="container.md">
+		<Container maxW={{ base: 'container.sm', md: 'container.md' }}>
 			{isLoadingProducts && Object.keys(result).length === 0 ?
 				<Center>
 					<Spinner />
