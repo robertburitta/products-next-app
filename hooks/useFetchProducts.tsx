@@ -3,12 +3,12 @@ import { useQuery } from 'react-query';
 import { Result } from '../types/Result';
 
 interface useFetchProductsProps {
-	skip?: number;
 	limit?: number;
 }
 
-export const useFetchProducts = ({ skip = 0, limit = 5 }: useFetchProductsProps) => {
+export const useFetchProducts = ({ limit = 5 }: useFetchProductsProps) => {
 	const [result, setResult] = useState({} as Result);
+	const [categories, setCategories] = useState([] as string[]);
 	const [page, setPage] = useState(1);
 	const [canLoadMore, setCanLoadMore] = useState(true);
 	const API_URL = 'https://dummyjson.com/products';
@@ -34,7 +34,7 @@ export const useFetchProducts = ({ skip = 0, limit = 5 }: useFetchProductsProps)
 		});
 	};
 
-	const { isLoading } = useQuery(['products', page], () => fetchProducts(), {
+	const { isLoading: isLoadingProducts } = useQuery(['products', page], () => fetchProducts(), {
 		refetchOnMount: false,
 		refetchOnWindowFocus: false,
 		refetchOnReconnect: false,
@@ -57,10 +57,55 @@ export const useFetchProducts = ({ skip = 0, limit = 5 }: useFetchProductsProps)
 		setPage((prev) => prev + 1);
 	};
 
+	const fetchCategories = () => {
+		return new Promise(async (resolve, reject) => {
+			try {
+				await fetch(`${API_URL}/categories`)
+					.then(res => res.json()).then((data: Result) => {
+						resolve(data);
+					});
+			} catch (err) {
+				reject(new Error((err as Error).message));
+			}
+		});
+	};
+
+	const { isLoading: isLoadingCategories } = useQuery('categories', () => fetchCategories(), {
+		refetchOnMount: false,
+		refetchOnWindowFocus: false,
+		refetchOnReconnect: false,
+		onSuccess: (data) => {
+			setCategories(data as string[]);
+		},
+		onError: (err) => {
+			console.error(err);
+		}
+	});
+
+	const fetchByCategory = (category: string) => {
+		return new Promise(async (resolve, reject) => {
+			try {
+				await fetch(`${API_URL}/category/${category}`)
+					.then(res => res.json()).then((data: Result) => {
+						resolve(data);
+					});
+			} catch (err) {
+				reject(new Error((err as Error).message));
+			}
+		});
+	};
+
+	const searchByCategory = (category: string) => {
+		console.log(category);
+	};
+
 	return {
 		result,
-		isLoading,
+		isLoadingProducts,
 		loadMore,
-		canLoadMore
+		canLoadMore,
+		categories,
+		isLoadingCategories,
+		searchByCategory
 	};
 };

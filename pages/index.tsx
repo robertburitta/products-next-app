@@ -1,24 +1,29 @@
 import type { NextPage } from 'next';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { List } from '../components/List';
-import { useFetchProducts } from '../hooks/useFetchProducts';
-import { Button, Center, Container, Spinner } from '@chakra-ui/react';
 import { Filters } from '../components/Filters';
+import { useFetchProducts } from '../hooks/useFetchProducts';
+import { Button, Center, Container, Divider, Spinner } from '@chakra-ui/react';
 
 const Home: NextPage = () => {
-	const { result, isLoading, loadMore, canLoadMore } = useFetchProducts({});
+	const { result, isLoadingProducts, loadMore, canLoadMore, categories, isLoadingCategories, searchByCategory } = useFetchProducts({});
 
 	return (
-		<Container maxW="container.md" centerContent={isLoading}>
-			{isLoading ?
-				<Spinner />
+		<Container maxW="container.md">
+			{isLoadingProducts && Object.keys(result).length === 0 ?
+				<Center>
+					<Spinner />
+				</Center>
 				:
 				<React.Fragment>
-					<Filters />
+					<Filters isLoadingCategories={isLoadingCategories} categories={categories} searchByCategory={searchByCategory} />
+					<Divider my="3" />
 					<List result={result} />
-					{canLoadMore && <Center>
-						<Button colorScheme='blue' onClick={loadMore} marginTop="4">Load more</Button>
-					</Center>}
+					{canLoadMore &&
+						<Center>
+							<Button colorScheme='blue' onClick={loadMore} my="5" isLoading={isLoadingProducts}>Load more</Button>
+						</Center>
+					}
 				</React.Fragment>
 			}
 		</Container>
